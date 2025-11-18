@@ -10,14 +10,20 @@ exports.ExposeStore = () => {
      */
     window.compareWwebVersions = (lOperand, operator, rOperand) => {
         if (!['>', '>=', '<', '<=', '='].includes(operator)) {
-            throw new class _ extends Error {
-                constructor(m) { super(m); this.name = 'CompareWwebVersionsError'; }
+            throw new class extends Error {
+                constructor(m) { 
+                    super(m); 
+                    this.name = 'CompareWwebVersionsError'; 
+                }
             }('Invalid comparison operator is provided');
-
         }
+        
         if (typeof lOperand !== 'string' || typeof rOperand !== 'string') {
-            throw new class _ extends Error {
-                constructor(m) { super(m); this.name = 'CompareWwebVersionsError'; }
+            throw new class extends Error {
+                constructor(m) { 
+                    super(m); 
+                    this.name = 'CompareWwebVersionsError'; 
+                }
             }('A non-string WWeb version type is provided');
         }
 
@@ -35,15 +41,18 @@ exports.ExposeStore = () => {
 
         return (
             operator === '>' ? lOperand > rOperand :
-                operator === '>=' ? lOperand >= rOperand :
-                    operator === '<' ? lOperand < rOperand :
-                        operator === '<=' ? lOperand <= rOperand :
-                            operator === '=' ? lOperand === rOperand :
-                                false
+            operator === '>=' ? lOperand >= rOperand :
+            operator === '<' ? lOperand < rOperand :
+            operator === '<=' ? lOperand <= rOperand :
+            operator === '=' ? lOperand === rOperand :
+            false
         );
     };
 
+    // Initialize Store with WAWebCollections
     window.Store = Object.assign({}, window.require('WAWebCollections'));
+    
+    // Core Store modules
     window.Store.AppState = window.require('WAWebSocketModel').Socket;
     window.Store.BlockContact = window.require('WAWebBlockContactAction');
     window.Store.Conn = window.require('WAWebConnModel').Conn;
@@ -62,6 +71,8 @@ exports.ExposeStore = () => {
     window.Store.SendDelete = window.require('WAWebDeleteChatAction');
     window.Store.SendMessage = window.require('WAWebSendMsgChatAction');
     window.Store.EditMessage = window.require('WAWebSendMessageEditAction');
+    window.Store.MediaDataUtils = window.require('WAWebMediaDataUtils');
+    window.Store.BlobCache = window.require('WAWebMediaInMemoryBlobCache');
     window.Store.SendSeen = window.require('WAWebUpdateUnreadChatAction');
     window.Store.User = window.require('WAWebUserPrefsMeUser');
     window.Store.ContactMethods = window.require('WAWebContactGetters');
@@ -103,61 +114,76 @@ exports.ExposeStore = () => {
     window.Store.FindOrCreateChat = window.require('WAWebFindChatAction');
     window.Store.CustomerNoteUtils = window.require('WAWebNoteAction');
     window.Store.BusinessGatingUtils = window.require('WAWebBizGatingUtils');
-    window.Store.PollsVotesSchema = require('WAWebPollsVotesSchema');
+    window.Store.PollsVotesSchema = window.require('WAWebPollsVotesSchema');
+    window.Store.PollsSendVote = window.require('WAWebPollsSendVoteMsgAction');
     
+    // Composite Store modules
     window.Store.Settings = {
         ...window.require('WAWebUserPrefsGeneral'),
         ...window.require('WAWebUserPrefsNotifications'),
         setPushname: window.require('WAWebSetPushnameConnAction').setPushname
     };
+    
     window.Store.NumberInfo = {
         ...window.require('WAPhoneUtils'),
         ...window.require('WAPhoneFindCC')
     };
+    
     window.Store.ForwardUtils = {
         ...window.require('WAWebChatForwardMessage')
     };
+    
     window.Store.PinnedMsgUtils = {
         ...window.require('WAWebPinInChatSchema'),
         ...window.require('WAWebSendPinMessageAction')
     };
+    
     window.Store.ScheduledEventMsgUtils = {
         ...window.require('WAWebGenerateEventCallLink'),
         ...window.require('WAWebSendEventEditMsgAction'),
         ...window.require('WAWebSendEventResponseMsgAction')
     };
+    
     window.Store.VCard = {
         ...window.require('WAWebFrontendVcardUtils'),
         ...window.require('WAWebVcardParsingUtils'),
         ...window.require('WAWebVcardGetNameFromParsed')
     };
+    
     window.Store.StickerTools = {
         ...window.require('WAWebImageUtils'),
         ...window.require('WAWebAddWebpMetadata')
     };
+    
     window.Store.GroupUtils = {
         ...window.require('WAWebGroupCreateJob'),
         ...window.require('WAWebGroupModifyInfoJob'),
         ...window.require('WAWebExitGroupAction'),
-        ...window.require('WAWebContactProfilePicThumbBridge')
+        ...window.require('WAWebContactProfilePicThumbBridge'),
+        ...window.require('WAWebSetPropertyGroupAction')
     };
+    
     window.Store.GroupParticipants = {
         ...window.require('WAWebModifyParticipantsGroupAction'),
         ...window.require('WASmaxGroupsAddParticipantsRPC')
     };
+    
     window.Store.GroupInvite = {
         ...window.require('WAWebGroupInviteJob'),
         ...window.require('WAWebGroupQueryJob'),
         ...window.require('WAWebMexFetchGroupInviteCodeJob')
     };
+    
     window.Store.GroupInviteV4 = {
         ...window.require('WAWebGroupInviteV4Job'),
         ...window.require('WAWebChatSendMessages')
     };
+    
     window.Store.MembershipRequestUtils = {
         ...window.require('WAWebApiMembershipApprovalRequestStore'),
         ...window.require('WASmaxGroupsMembershipRequestsActionRPC')
     };
+    
     window.Store.ChannelUtils = {
         ...window.require('WAWebLoadNewsletterPreviewChatAction'),
         ...window.require('WAWebNewsletterMetadataQueryJob'),
@@ -178,6 +204,7 @@ exports.ExposeStore = () => {
         countryCodesIso: window.require('WAWebCountriesNativeCountryNames'),
         currentRegion: window.require('WAWebL10N').getRegion(),
     };
+    
     window.Store.SendChannelMessage = {
         ...window.require('WAWebNewsletterUpdateMsgsRecordsJob'),
         ...window.require('WAWebMsgDataFromModel'),
@@ -185,21 +212,22 @@ exports.ExposeStore = () => {
         ...window.require('WAWebNewsletterSendMsgAction'),
         ...window.require('WAMediaCalculateFilehash')
     };
+    
     window.Store.ChannelSubscribers = {
         ...window.require('WAWebMexFetchNewsletterSubscribersJob'),
         ...window.require('WAWebNewsletterSubscriberListAction')
     };
+    
     window.Store.AddressbookContactUtils = {
         ...window.require('WAWebSaveContactAction'),
         ...window.require('WAWebDeleteContactAction')
     };
 
+    // Chat find implementation fallback
     if (!window.Store.Chat._find || !window.Store.Chat.findImpl) {
         window.Store.Chat._find = e => {
             const target = window.Store.Chat.get(e);
-            return target ? Promise.resolve(target) : Promise.resolve({
-                id: e
-            });
+            return target ? Promise.resolve(target) : Promise.resolve({ id: e });
         };
         window.Store.Chat.findImpl = window.Store.Chat._find;
     }
@@ -210,6 +238,7 @@ exports.ExposeStore = () => {
      * @property {string|number} module The target module
      * @property {string} function The function name to get from a module
      */
+    
     /**
      * Function to modify functions
      * @param {TargetOptions} target Options specifying the target function to search for modifying
@@ -218,7 +247,7 @@ exports.ExposeStore = () => {
     window.injectToFunction = (target, callback) => {
         try {
             let module = window.require(target.module);
-            if (!module) return; 
+            if (!module) return;
 
             const path = target.function.split('.');
             const funcName = path.pop();
@@ -238,15 +267,30 @@ exports.ExposeStore = () => {
                     return originalFunction(...args);
                 }
             };
-
         } catch {
             return;
         }
     };
 
-    window.injectToFunction({ module: 'WAWebBackendJobsCommon', function: 'mediaTypeFromProtobuf' }, (func, ...args) => { const [proto] = args; return proto.locationMessage ? null : func(...args); });
+    // Function injections
+    window.injectToFunction(
+        { module: 'WAWebBackendJobsCommon', function: 'mediaTypeFromProtobuf' }, 
+        (func, ...args) => { 
+            const [proto] = args; 
+            return proto.locationMessage ? null : func(...args); 
+        }
+    );
 
-    window.injectToFunction({ module: 'WAWebE2EProtoUtils', function: 'typeAttributeFromProtobuf' }, (func, ...args) => { const [proto] = args; return proto.locationMessage || proto.groupInviteMessage ? 'text' : func(...args); });
+    window.injectToFunction(
+        { module: 'WAWebE2EProtoUtils', function: 'typeAttributeFromProtobuf' }, 
+        (func, ...args) => { 
+            const [proto] = args; 
+            return proto.locationMessage || proto.groupInviteMessage ? 'text' : func(...args); 
+        }
+    );
 
-    window.injectToFunction({ module: 'WAWebLid1X1MigrationGating', function: 'Lid1X1MigrationUtils.isLidMigrated' }, () => false);
+    window.injectToFunction(
+        { module: 'WAWebLid1X1MigrationGating', function: 'Lid1X1MigrationUtils.isLidMigrated' }, 
+        () => false
+    );
 };
