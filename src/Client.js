@@ -85,7 +85,11 @@ class Client extends EventEmitter {
             this._connectionState = 'DISCONNECTED';
             this._lastStateCheck = 0;
             this._stateCheckInterval = null;
-            
+                // ✅ ADD THESE MISSING VARIABLES:
+            this._messageBatch = [];          // Add this
+            this._batchTimeout = null;        // Add this  
+            this._batchProcessing = false;    // Add this
+            this._requestHandlers = [];       // Add this
             if(!this.options.authStrategy) {
                 this.authStrategy = new NoAuth();
             } else {
@@ -389,6 +393,77 @@ class Client extends EventEmitter {
         this.emit(Events.READY);
         this.authStrategy.afterAuthReady();
     }
+
+
+/**
+ * Safe cleanup method to prevent memory leaks during errors
+ * @private
+ */
+async _safeCleanup() {
+    try {
+        console.log('Performing safe cleanup...');
+        
+        // 1. Clear all intervals and timeouts
+        if (this._activeIntervals) {
+            this._activeIntervals.forEach(clearInterval);
+            this._activeIntervals.clear();
+        }
+        
+        if (this._stateCheckInterval) {
+            clearInterval(this._stateCheckInterval);
+            this._stateCheckInterval = null;
+        }
+
+        // 2. Clear batch processing
+        if (this._batchTimeout) {
+            clearTimeout(this._batchTimeout);
+            this._batchTimeout = null;
+        }
+
+        // 3. Clear message batch
+        if (this._messageBatch) {
+            this._messageBatch.length = 0;
+        }
+
+        // 4. Clear page intervals safely
+        if (this.pupPage && !this.pupPage.isClosed()) {
+            await this.pupPage.evaluate(() => {
+                // Clear known intervals
+                if (window.codeInterval) {
+                    clearInterval(window.codeInterval);
+                    window.codeInterval = null;
+                }
+                
+                // Clear any other intervals
+                Object.keys(window).forEach(key => {
+                    if (key.includes('Interval') && window[key] && typeof window[key] === 'number') {
+                        clearInterval(window[key]);
+                        window[key] = null;
+                    }
+                });
+            }).catch(error => {
+                // Silent fail - page might be closed
+                console.warn('Page cleanup warning:', error.message);
+            });
+        }
+
+        // 5. Clear caches
+        if (this._chatCache) this._chatCache.clear();
+        if (this._contactCache) this._contactCache.clear();
+        if (this._messageCache) this._messageCache.clear();
+        if (this._cacheTimestamps) this._cacheTimestamps.clear();
+
+        console.log('Safe cleanup completed');
+        
+    } catch (error) {
+        console.error('Error during safe cleanup:', error);
+        // Don't throw - this is cleanup, we want to proceed
+    }
+}
+
+
+
+
 
     // ✅ ADD: Store injection with retry logic
     async _injectStoreWithRetry(isCometOrAbove) {
