@@ -90,6 +90,7 @@ class Client extends EventEmitter {
             this._batchTimeout = null;        // Add this  
             this._batchProcessing = false;    // Add this
             this._requestHandlers = [];       // Add this
+             this._cleanupInterval = null;     // ✅ ADD: Cache cleanup interval
             if(!this.options.authStrategy) {
                 this.authStrategy = new NoAuth();
             } else {
