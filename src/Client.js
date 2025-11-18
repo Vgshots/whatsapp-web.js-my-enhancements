@@ -460,7 +460,46 @@ async _safeCleanup() {
         // Don't throw - this is cleanup, we want to proceed
     }
 }
-
+/**
+ * Process batched messages to improve performance
+ * @private
+ */
+async _processMessageBatch() {
+    if (this._batchProcessing || this._messageBatch.length === 0) return;
+    
+    this._batchProcessing = true;
+    const batchToProcess = [...this._messageBatch];
+    this._messageBatch = [];
+    
+    try {
+        for (const msg of batchToProcess) {
+            if (msg.type === 'gp2') {
+                const notification = new GroupNotification(this, msg);
+                if (['add', 'invite', 'linked_group_join'].includes(msg.subtype)) {
+                    this.emit(Events.GROUP_JOIN, notification);
+                } else if (msg.subtype === 'remove' || msg.subtype === 'leave') {
+                    this.emit(Events.GROUP_LEAVE, notification);
+                } else if (msg.subtype === 'promote' || msg.subtype === 'demote') {
+                    this.emit(Events.GROUP_ADMIN_CHANGED, notification);
+                } else if (msg.subtype === 'membership_approval_request') {
+                    this.emit(Events.GROUP_MEMBERSHIP_REQUEST, notification);
+                } else {
+                    this.emit(Events.GROUP_UPDATE, notification);
+                }
+            } else {
+                const message = new Message(this, msg);
+                this.emit(Events.MESSAGE_CREATE, message);
+                if (!msg.id.fromMe) {
+                    this.emit(Events.MESSAGE_RECEIVED, message);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error processing message batch:', error);
+    } finally {
+        this._batchProcessing = false;
+    }
+}
 
 
 
@@ -2799,7 +2838,7 @@ async getContactById(contactId) {
      * @returns {Promise<boolean>} Returns true if the operation completed successfully, false otherwise
      */
     async deleteChannel(channelId) {
-        return await this.client.pupPage.evaluate(async (channelId) => {
+        return await this.pupPage.evaluate(async (channelId) => {
             const channel = await window.WWebJS.getChat(channelId, { getAsModel: false });
             if (!channel) return false;
             try {
