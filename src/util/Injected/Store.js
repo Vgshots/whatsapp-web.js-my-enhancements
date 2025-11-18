@@ -101,12 +101,9 @@ exports.ExposeStore = () => {
     window.Store.UploadUtils = window.require('WAWebUploadManager');
     window.Store.WAWebStreamModel = window.require('WAWebStreamModel');
     window.Store.FindOrCreateChat = window.require('WAWebFindChatAction');
-<<<<<<< HEAD
     window.Store.CustomerNoteUtils = window.require('WAWebNoteAction');
     window.Store.BusinessGatingUtils = window.require('WAWebBizGatingUtils');
     window.Store.PollsVotesSchema = require('WAWebPollsVotesSchema');
-=======
->>>>>>> 5276e30 (fix: Lid is missing in chat table (#3703))
     
     window.Store.Settings = {
         ...window.require('WAWebUserPrefsGeneral'),
@@ -219,7 +216,6 @@ exports.ExposeStore = () => {
      * @param {Function} callback Modified function
      */
     window.injectToFunction = (target, callback) => {
-<<<<<<< HEAD
         try {
             let module = window.require(target.module);
             if (!module) return; 
@@ -246,26 +242,11 @@ exports.ExposeStore = () => {
         } catch {
             return;
         }
-=======
-        let module = window.require(target.module);
-
-        const path = target.function.split('.');
-        const funcName = path.pop();
-        for (const key of path) {
-            module = module[key];
-        }
-
-        const originalFunction = module[funcName];
-        module[funcName] = (...args) => callback(originalFunction, ...args);
->>>>>>> 5276e30 (fix: Lid is missing in chat table (#3703))
     };
 
     window.injectToFunction({ module: 'WAWebBackendJobsCommon', function: 'mediaTypeFromProtobuf' }, (func, ...args) => { const [proto] = args; return proto.locationMessage ? null : func(...args); });
 
     window.injectToFunction({ module: 'WAWebE2EProtoUtils', function: 'typeAttributeFromProtobuf' }, (func, ...args) => { const [proto] = args; return proto.locationMessage || proto.groupInviteMessage ? 'text' : func(...args); });
-<<<<<<< HEAD
-=======
 
     window.injectToFunction({ module: 'WAWebLid1X1MigrationGating', function: 'Lid1X1MigrationUtils.isLidMigrated' }, () => false);
->>>>>>> 5276e30 (fix: Lid is missing in chat table (#3703))
 };
